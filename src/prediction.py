@@ -52,11 +52,26 @@ def predict_url(url):
 
 if __name__ == "__main__":
 
-    test_url = "https://www.example.com/login"
+    test_urls = [
+        "https://www.google.com/",
+        "https://www.example.com/login",
+        "http://192.168.1.1/login",
+        "https://example.com/login?id=123",
+        "http://example.com/verify-account"
+    ]
 
-    result = predict_url(test_url)
+    for url in test_urls:
+        print("\n" + "=" * 50)
 
-    print("\n=== HASIL PREDIKSI ===")
-    print("URL:", test_url)
-    print("Prediksi:", result["label"])
-    print("Probabilitas:", f"{result['probability'] * 100:.2f}%")
+        try:
+            result = predict_url(url)
+
+            print("URL:", url)
+            print("Prediksi:", result["label"])
+            print(
+                "Probabilitas:",
+                f"{result['probability'] * 100:.2f}%"
+            )
+
+        except Exception as error:
+            print("Error:", error)
