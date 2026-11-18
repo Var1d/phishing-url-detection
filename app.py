@@ -28,6 +28,44 @@ from prediction import predict_url, load_model
 
 st.set_page_config(page_title="Phishing URL Detection", page_icon="🛡️", layout="wide")
 
+# ==========================================
+# VALIDASI FORMAT URL
+# ==========================================
+
+
+def validate_url(url):
+
+    url = url.strip()
+
+    if not url:
+        return False, "URL tidak boleh kosong."
+
+    if any(char.isspace() for char in url):
+        return False, "URL tidak boleh mengandung spasi."
+
+    try:
+        parsed = urlsplit(url)
+
+        if parsed.scheme.lower() not in ["http", "https"]:
+            return False, "URL harus menggunakan http:// atau https://."
+
+        if not parsed.netloc or not parsed.hostname:
+            return False, "URL harus memiliki nama host atau alamat IP."
+
+        # Memeriksa format port jika dicantumkan
+        port = parsed.port
+
+        if port is not None and not (1 <= port <= 65535):
+            return False, "Nomor port tidak valid."
+
+        if parsed.username is not None or parsed.password is not None:
+            return False, "URL dengan informasi username/password tidak didukung."
+
+    except ValueError:
+        return False, "Format URL tidak valid."
+
+    return True, "URL valid."
+
 
 # ==========================================
 # MEMUAT MODEL
@@ -222,14 +260,10 @@ if analyze_button:
 
     else:
 
-        parsed_url = urlsplit(url.strip())
+        is_valid, message = validate_url(url)
 
-        if parsed_url.scheme not in ["http", "https"] or not parsed_url.netloc:
-
-            st.warning(
-                "Format URL tidak valid. "
-                "Gunakan alamat lengkap yang diawali http:// atau https://."
-            )
+        if not is_valid:
+            st.warning(message)
 
         else:
 
