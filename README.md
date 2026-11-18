@@ -397,9 +397,9 @@ Melalui proses preprocessing data, ekstraksi fitur, klasifikasi menggunakan Rand
 
 **Anggota Kelompok:**
 
-1. [Nama Anggota 1]
-2. [Nama Anggota 2]
-3. [Nama Anggota 3]
+1. Jamal Abdul Nasir 
+2. Muhammad Fadhil Nurwahid
+3. Farid Dhiya Fairuz
 
 ---
 
