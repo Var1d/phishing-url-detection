@@ -28,6 +28,7 @@ from prediction import predict_url, load_model
 
 st.set_page_config(page_title="Phishing URL Detection", page_icon="🛡️", layout="wide")
 
+
 # ==========================================
 # VALIDASI FORMAT URL
 # ==========================================
@@ -52,7 +53,6 @@ def validate_url(url):
         if not parsed.netloc or not parsed.hostname:
             return False, "URL harus memiliki nama host atau alamat IP."
 
-        # Memeriksa format port jika dicantumkan
         port = parsed.port
 
         if port is not None and not (1 <= port <= 65535):
@@ -109,7 +109,7 @@ def load_dataset_overview():
 
 
 # ==========================================
-# EVALUASI MODEL SECARA OTOMATIS
+# EVALUASI MODEL DAN ANALISIS KESALAHAN
 # ==========================================
 
 
@@ -131,13 +131,18 @@ def calculate_model_evaluation():
     X = df[feature_columns]
     y = df["label"]
 
-    # Pembagian data harus sama dengan proses training
+    # Pembagian data sama dengan proses training
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.20, random_state=42, stratify=y
     )
 
-    # Prediksi pada data testing
+    # Prediksi data testing
     y_pred = model.predict(X_test)
+
+    probabilities = model.predict_proba(X_test)
+
+    phishing_index = list(model.classes_).index(1)
+    phishing_probabilities = probabilities[:, phishing_index]
 
     # Menghitung metrik evaluasi
     accuracy = accuracy_score(y_test, y_pred)
@@ -150,6 +155,52 @@ def calculate_model_evaluation():
 
     matrix = confusion_matrix(y_test, y_pred, labels=[0, 1])
 
+    # ======================================
+    # MEMBUAT TABEL HASIL PREDIKSI
+    # ======================================
+
+    test_urls = df.loc[X_test.index, "url"]
+
+    results = pd.DataFrame(
+        {
+            "URL": test_urls.values,
+            "Actual Label": y_test.values,
+            "Predicted Label": y_pred,
+            "Phishing Score": phishing_probabilities,
+        }
+    )
+
+    results["Actual Label"] = results["Actual Label"].map({0: "Benign", 1: "Phishing"})
+
+    results["Predicted Label"] = results["Predicted Label"].map(
+        {0: "Benign", 1: "Phishing"}
+    )
+
+    # ======================================
+    # MENGIDENTIFIKASI FALSE POSITIVE
+    # ======================================
+
+    false_positive = results[
+        (results["Actual Label"] == "Benign")
+        & (results["Predicted Label"] == "Phishing")
+    ].copy()
+
+    false_positive["Error Type"] = "False Positive"
+
+    # ======================================
+    # MENGIDENTIFIKASI FALSE NEGATIVE
+    # ======================================
+
+    false_negative = results[
+        (results["Actual Label"] == "Phishing")
+        & (results["Predicted Label"] == "Benign")
+    ].copy()
+
+    false_negative["Error Type"] = "False Negative"
+
+    # Menggabungkan seluruh kesalahan
+    misclassified = pd.concat([false_positive, false_negative], ignore_index=True)
+
     return {
         "accuracy": accuracy,
         "precision": precision,
@@ -157,6 +208,9 @@ def calculate_model_evaluation():
         "f1": f1,
         "matrix": matrix,
         "test_total": len(y_test),
+        "false_positive": false_positive,
+        "false_negative": false_negative,
+        "misclassified": misclassified,
     }
 
 
@@ -196,9 +250,7 @@ try:
     col1, col2, col3 = st.columns(3)
 
     col1.metric("Dataset Awal", f'{dataset_info["raw_total"]:,}')
-
     col2.metric("Setelah Cleaning", f'{dataset_info["clean_total"]:,}')
-
     col3.metric("Baris Dihapus", f'{dataset_info["removed"]:,}')
 
     st.subheader("Distribusi Kelas")
@@ -213,7 +265,6 @@ try:
     col1, col2 = st.columns(2)
 
     col1.metric("Benign URLs", f'{dataset_info["benign"]:,}')
-
     col2.metric("Phishing URLs", f'{dataset_info["phishing"]:,}')
 
     st.caption(
@@ -263,6 +314,7 @@ if analyze_button:
         is_valid, message = validate_url(url)
 
         if not is_valid:
+
             st.warning(message)
 
         else:
@@ -414,7 +466,6 @@ try:
     ax.set_xlabel("Predicted Label", fontsize=10)
     ax.set_ylabel("Actual Label", fontsize=10)
     ax.set_title("Random Forest Confusion Matrix", fontsize=12)
-
     ax.tick_params(axis="both", labelsize=9)
 
     fig.tight_layout()
@@ -442,6 +493,117 @@ try:
 
         st.error(f"False Negative: {fn:,}")
         st.success(f"True Positive: {tp:,}")
+
+    # ======================================
+    # ANALISIS FALSE POSITIVE DAN NEGATIVE
+    # ======================================
+
+    st.divider()
+    st.header("⚠️ Analisis Kesalahan Model")
+
+    st.write(
+        "Bagian ini menampilkan URL pada data testing yang "
+        "salah diklasifikasikan oleh model."
+    )
+
+    false_positive = evaluation["false_positive"]
+    false_negative = evaluation["false_negative"]
+    misclassified = evaluation["misclassified"]
+
+    # Ringkasan kesalahan
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("False Positive", f"{len(false_positive):,}")
+
+    col2.metric("False Negative", f"{len(false_negative):,}")
+
+    col3.metric("Total Kesalahan", f"{len(misclassified):,}")
+
+    st.markdown("**Pengertian jenis kesalahan:**")
+
+    st.write(
+        "- **False Positive:** URL yang sebenarnya berlabel Benign "
+        "tetapi diprediksi sebagai Phishing."
+    )
+
+    st.write(
+        "- **False Negative:** URL yang sebenarnya berlabel Phishing "
+        "tetapi diprediksi sebagai Benign."
+    )
+
+    # --------------------------------------
+    # TABEL FALSE POSITIVE DAN NEGATIVE
+    # --------------------------------------
+
+    tab_fp, tab_fn = st.tabs(["False Positive", "False Negative"])
+
+    columns_to_show = ["URL", "Actual Label", "Predicted Label", "Phishing Score"]
+
+    with tab_fp:
+
+        st.subheader("Contoh False Positive")
+
+        if not false_positive.empty:
+
+            fp_display = false_positive[columns_to_show].copy()
+
+            fp_display["Phishing Score"] = (fp_display["Phishing Score"] * 100).map(
+                lambda value: f"{value:.2f}%"
+            )
+
+            st.dataframe(fp_display.head(10), use_container_width=True, hide_index=True)
+
+            st.caption(
+                "Menampilkan maksimal 10 contoh False Positive. "
+                "Seluruh hasil dapat diunduh melalui file CSV."
+            )
+
+        else:
+
+            st.info("Tidak ditemukan False Positive.")
+
+    with tab_fn:
+
+        st.subheader("Contoh False Negative")
+
+        if not false_negative.empty:
+
+            fn_display = false_negative[columns_to_show].copy()
+
+            fn_display["Phishing Score"] = (fn_display["Phishing Score"] * 100).map(
+                lambda value: f"{value:.2f}%"
+            )
+
+            st.dataframe(fn_display.head(10), use_container_width=True, hide_index=True)
+
+            st.caption(
+                "Menampilkan maksimal 10 contoh False Negative. "
+                "Seluruh hasil dapat diunduh melalui file CSV."
+            )
+
+        else:
+
+            st.info("Tidak ditemukan False Negative.")
+
+    # --------------------------------------
+    # DOWNLOAD HASIL KESALAHAN
+    # --------------------------------------
+
+    if not misclassified.empty:
+
+        csv_data = misclassified.to_csv(index=False).encode("utf-8-sig")
+
+        st.download_button(
+            label="⬇️ Unduh Seluruh Hasil Kesalahan (CSV)",
+            data=csv_data,
+            file_name="misclassified_urls.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+
+    else:
+
+        st.success("Tidak ditemukan kesalahan klasifikasi pada data testing.")
 
 except Exception as error:
 
