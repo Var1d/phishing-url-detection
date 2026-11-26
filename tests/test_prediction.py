@@ -9,11 +9,7 @@ sys.path.insert(0, str(BASE_DIR / "src"))
 
 from prediction import predict_url
 
-# ==========================================
 # TEST PREDIKSI URL
-# ==========================================
-
-
 @pytest.mark.parametrize(
     "url",
     [
@@ -50,12 +46,7 @@ def test_prediction_returns_valid_result(url):
     # Memastikan seluruh 22 fitur tersedia
     assert len(result["features"]) == 22
 
-
-# ==========================================
 # TEST KONSISTENSI PREDIKSI
-# ==========================================
-
-
 def test_prediction_is_consistent():
 
     url = "https://www.google.com/"

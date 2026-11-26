@@ -3,10 +3,7 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 from prediction import load_model
 
-# ==========================================
 # PATH
-# ==========================================
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 DATASET_PATH = BASE_DIR / "dataset" / "cleaned_dataset.csv"
@@ -14,11 +11,7 @@ OUTPUT_DIR = BASE_DIR / "evaluation"
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-
-# ==========================================
 # MEMUAT DATA DAN MODEL
-# ==========================================
-
 print("Memuat dataset dan model...")
 
 df = pd.read_csv(DATASET_PATH)
@@ -31,11 +24,7 @@ feature_columns = artifact["feature_columns"]
 X = df[feature_columns]
 y = df["label"]
 
-
-# ==========================================
 # MEMBAGI DATA TRAINING DAN TESTING
-# ==========================================
-
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.20, random_state=42, stratify=y
 )
@@ -43,11 +32,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 # Mengambil URL asli sesuai indeks data testing
 test_urls = df.loc[X_test.index, "url"]
 
-
-# ==========================================
 # MELAKUKAN PREDIKSI
-# ==========================================
-
 print("Melakukan prediksi pada data testing...")
 
 predictions = model.predict(X_test)
@@ -59,11 +44,7 @@ phishing_index = list(model.classes_).index(1)
 
 phishing_probabilities = probabilities[:, phishing_index]
 
-
-# ==========================================
 # MEMBUAT TABEL HASIL
-# ==========================================
-
 results = pd.DataFrame(
     {
         "URL": test_urls.values,
@@ -79,11 +60,7 @@ results["Predicted Label"] = results["Predicted Label"].map(
     {0: "Benign", 1: "Phishing"}
 )
 
-
-# ==========================================
 # MENGIDENTIFIKASI KESALAHAN
-# ==========================================
-
 false_positive = results[
     (results["Actual Label"] == "Benign") & (results["Predicted Label"] == "Phishing")
 ]
@@ -100,10 +77,7 @@ misclassified = pd.concat(
     ]
 )
 
-# ==========================================
 # MENAMPILKAN HASIL
-# ==========================================
-
 print("\n" + "=" * 50)
 print("HASIL ANALISIS KESALAHAN MODEL")
 print("=" * 50)
@@ -135,11 +109,7 @@ if len(false_negative) > 0:
 else:
     print("Tidak ditemukan False Negative.")
 
-
-# ==========================================
 # MENYIMPAN HASIL
-# ==========================================
-
 output_path = OUTPUT_DIR / "misclassified_urls.csv"
 
 misclassified.to_csv(output_path, index=False)

@@ -15,10 +15,7 @@ from sklearn.metrics import (
     confusion_matrix,
 )
 
-# ==========================================
 # KONFIGURASI DAN PATH
-# ==========================================
-
 BASE_DIR = Path(__file__).resolve().parent
 DATASET_DIR = BASE_DIR / "dataset"
 
@@ -28,12 +25,7 @@ from prediction import predict_url, load_model
 
 st.set_page_config(page_title="Phishing URL Detection", page_icon="🛡️", layout="wide")
 
-
-# ==========================================
 # VALIDASI FORMAT URL
-# ==========================================
-
-
 def validate_url(url):
 
     url = url.strip()
@@ -67,21 +59,13 @@ def validate_url(url):
     return True, "URL valid."
 
 
-# ==========================================
 # MEMUAT MODEL
-# ==========================================
-
-
 @st.cache_resource
 def get_model_artifact():
     return load_model()
 
 
-# ==========================================
 # MEMBACA DATASET OVERVIEW
-# ==========================================
-
-
 @st.cache_data
 def load_dataset_overview():
 
@@ -107,12 +91,7 @@ def load_dataset_overview():
         "phishing": int(label_counts.get(1, 0)),
     }
 
-
-# ==========================================
 # EVALUASI MODEL DAN ANALISIS KESALAHAN
-# ==========================================
-
-
 @st.cache_data
 def calculate_model_evaluation():
 
@@ -155,10 +134,7 @@ def calculate_model_evaluation():
 
     matrix = confusion_matrix(y_test, y_pred, labels=[0, 1])
 
-    # ======================================
     # MEMBUAT TABEL HASIL PREDIKSI
-    # ======================================
-
     test_urls = df.loc[X_test.index, "url"]
 
     results = pd.DataFrame(
@@ -176,10 +152,7 @@ def calculate_model_evaluation():
         {0: "Benign", 1: "Phishing"}
     )
 
-    # ======================================
     # MENGIDENTIFIKASI FALSE POSITIVE
-    # ======================================
-
     false_positive = results[
         (results["Actual Label"] == "Benign")
         & (results["Predicted Label"] == "Phishing")
@@ -187,10 +160,7 @@ def calculate_model_evaluation():
 
     false_positive["Error Type"] = "False Positive"
 
-    # ======================================
     # MENGIDENTIFIKASI FALSE NEGATIVE
-    # ======================================
-
     false_negative = results[
         (results["Actual Label"] == "Phishing")
         & (results["Predicted Label"] == "Benign")
@@ -214,10 +184,7 @@ def calculate_model_evaluation():
     }
 
 
-# ==========================================
 # JUDUL DAN DESKRIPSI
-# ==========================================
-
 st.title("🛡️ Phishing URL Detection System")
 
 st.write(
@@ -232,10 +199,7 @@ st.info(
 )
 
 
-# ==========================================
 # DATASET OVERVIEW
-# ==========================================
-
 st.divider()
 st.header("📁 Dataset Overview")
 
@@ -276,10 +240,7 @@ except Exception as error:
     st.warning(f"Gagal membaca dataset: {error}")
 
 
-# ==========================================
 # INPUT URL
-# ==========================================
-
 st.divider()
 st.header("🔎 Periksa URL")
 
@@ -290,19 +251,11 @@ url = st.text_input(
 
 analyze_button = st.button("Analisis URL", type="primary", use_container_width=True)
 
-
-# ==========================================
 # RIWAYAT ANALISIS
-# ==========================================
-
 if "history" not in st.session_state:
     st.session_state.history = []
 
-
-# ==========================================
 # PROSES PREDIKSI
-# ==========================================
-
 if analyze_button:
 
     if not url.strip():
@@ -386,10 +339,7 @@ if analyze_button:
                 st.error(f"Terjadi kesalahan saat menganalisis URL: {error}")
 
 
-# ==========================================
 # RIWAYAT ANALISIS
-# ==========================================
-
 st.divider()
 st.header("🕘 Riwayat Analisis")
 
@@ -408,11 +358,7 @@ else:
 
     st.caption("Belum ada URL yang dianalisis.")
 
-
-# ==========================================
 # EVALUASI MODEL
-# ==========================================
-
 st.divider()
 st.header("📈 Evaluasi Model")
 
@@ -425,10 +371,7 @@ try:
 
     evaluation = calculate_model_evaluation()
 
-    # --------------------------------------
     # METRIK EVALUASI
-    # --------------------------------------
-
     col1, col2, col3, col4 = st.columns(4)
 
     col1.metric("Accuracy", f'{evaluation["accuracy"] * 100:.2f}%')
@@ -440,11 +383,8 @@ try:
     col4.metric("F1-Score", f'{evaluation["f1"] * 100:.2f}%')
 
     st.caption(f"Jumlah data pengujian: {evaluation['test_total']:,} URL.")
-
-    # --------------------------------------
+    
     # CONFUSION MATRIX
-    # --------------------------------------
-
     st.subheader("Confusion Matrix")
 
     matrix = evaluation["matrix"]
@@ -494,10 +434,8 @@ try:
         st.error(f"False Negative: {fn:,}")
         st.success(f"True Positive: {tp:,}")
 
-    # ======================================
-    # ANALISIS FALSE POSITIVE DAN NEGATIVE
-    # ======================================
 
+    # ANALISIS FALSE POSITIVE DAN NEGATIVE
     st.divider()
     st.header("⚠️ Analisis Kesalahan Model")
 
@@ -531,10 +469,7 @@ try:
         "tetapi diprediksi sebagai Benign."
     )
 
-    # --------------------------------------
     # TABEL FALSE POSITIVE DAN NEGATIVE
-    # --------------------------------------
-
     tab_fp, tab_fn = st.tabs(["False Positive", "False Negative"])
 
     columns_to_show = ["URL", "Actual Label", "Predicted Label", "Phishing Score"]
@@ -585,10 +520,7 @@ try:
 
             st.info("Tidak ditemukan False Negative.")
 
-    # --------------------------------------
     # DOWNLOAD HASIL KESALAHAN
-    # --------------------------------------
-
     if not misclassified.empty:
 
         csv_data = misclassified.to_csv(index=False).encode("utf-8-sig")
@@ -610,10 +542,7 @@ except Exception as error:
     st.error(f"Gagal melakukan evaluasi model: {error}")
 
 
-# ==========================================
 # FEATURE IMPORTANCE
-# ==========================================
-
 st.divider()
 st.header("🔍 Feature Importance")
 
@@ -672,10 +601,7 @@ except Exception as error:
     st.error(f"Gagal menampilkan Feature Importance: {error}")
 
 
-# ==========================================
 # FOOTER
-# ==========================================
-
 st.divider()
 
 st.caption(

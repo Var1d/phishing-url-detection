@@ -9,6 +9,8 @@ Aplikasi menganalisis karakteristik atau fitur dari sebuah URL untuk mengklasifi
 
 Aplikasi dibangun menggunakan Python, Scikit-learn, dan Streamlit. Pengguna dapat memasukkan URL untuk dianalisis tanpa aplikasi harus membuka atau mengunjungi situs tersebut.
 
+Versi antarmuka baru menggunakan Vue 3 untuk frontend dan Flask untuk API Python. File `app.py` Streamlit tetap tersedia sebagai versi lama.
+
 ---
 
 ## 1. Fitur Utama
@@ -267,21 +269,32 @@ Setelah proses tersebut selesai, model sudah dapat digunakan oleh aplikasi untuk
 
 Pastikan virtual environment sudah aktif serta dataset dan model sudah tersedia.
 
-Jalankan aplikasi menggunakan perintah:
+### Versi Vue + Flask
+
+Bangun frontend Vue:
+
+```bash
+cd frontend
+npm.cmd install
+npm.cmd run build
+cd ..
+```
+
+Jalankan server Flask:
+
+```text
+python api.py
+```
+
+Buka `http://127.0.0.1:5000` melalui browser.
+
+Untuk pengembangan frontend, jalankan `npm.cmd run dev` di folder `frontend` dan buka alamat Vite yang ditampilkan, biasanya `http://localhost:5173`. Frontend development akan meneruskan permintaan `/api` ke Flask.
+
+### Versi Streamlit Lama
 
 ```bash
 streamlit run app.py
 ```
-
-Setelah berhasil dijalankan, Streamlit akan menampilkan alamat aplikasi lokal, biasanya:
-
-```text
-http://localhost:8501
-```
-
-Buka alamat tersebut melalui browser.
-
-Masukkan URL pada kolom pemeriksaan, kemudian tekan tombol **Analisis URL** untuk mendapatkan hasil klasifikasi.
 
 ---
 

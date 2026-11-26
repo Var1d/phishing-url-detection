@@ -13,19 +13,13 @@ from sklearn.metrics import (
     classification_report,
 )
 
-# ==========================================
 # 1. MENENTUKAN LOKASI FILE
-# ==========================================
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 DATASET_PATH = BASE_DIR / "dataset" / "cleaned_dataset.csv"
 MODEL_PATH = BASE_DIR / "models" / "random_forest.pkl"
 
-# ==========================================
 # 2. MEMBACA DATASET
-# ==========================================
-
 print("Membaca dataset...")
 
 df = pd.read_csv(DATASET_PATH)
@@ -44,10 +38,7 @@ print("Jumlah fitur:", len(feature_columns))
 print("Distribusi label:")
 print(y.value_counts())
 
-# ==========================================
 # 3. MEMBAGI DATASET
-# ==========================================
-
 print("\nMembagi dataset...")
 
 X_train, X_test, y_train, y_test = train_test_split(
@@ -58,38 +49,26 @@ print("\n=== HASIL PEMBAGIAN DATA ===")
 print("Training:", len(X_train))
 print("Testing:", len(X_test))
 
-# ==========================================
 # 4. MEMBUAT MODEL RANDOM FOREST
-# ==========================================
-
 print("\nMembuat model Random Forest...")
 
 model = RandomForestClassifier(
     n_estimators=200, random_state=42, class_weight="balanced", n_jobs=-1
 )
 
-# ==========================================
 # 5. MELATIH MODEL
-# ==========================================
-
 print("\nMemulai training model...")
 
 model.fit(X_train, y_train)
 
 print("Training selesai!")
 
-# ==========================================
 # 6. MELAKUKAN PREDIKSI
-# ==========================================
-
 print("\nMelakukan prediksi pada data testing...")
 
 y_pred = model.predict(X_test)
 
-# ==========================================
 # 7. EVALUASI MODEL
-# ==========================================
-
 accuracy = accuracy_score(y_test, y_pred)
 
 precision = precision_score(y_test, y_pred, pos_label=1, zero_division=0)
@@ -113,10 +92,7 @@ print(
     )
 )
 
-# ==========================================
 # 8. CONFUSION MATRIX
-# ==========================================
-
 cm = confusion_matrix(y_test, y_pred, labels=[0, 1])
 
 tn, fp, fn, tp = cm.ravel()
@@ -128,10 +104,7 @@ print("False Positive:", fp)
 print("False Negative:", fn)
 print("True Positive :", tp)
 
-# ==========================================
 # 9. FEATURE IMPORTANCE
-# ==========================================
-
 importance = pd.DataFrame(
     {"Feature": feature_columns, "Importance": model.feature_importances_}
 )
@@ -141,12 +114,10 @@ importance = importance.sort_values(by="Importance", ascending=False)
 print("\n=== TOP 10 FEATURE IMPORTANCE ===")
 print(importance.head(10).to_string(index=False))
 
-# ==========================================
 # 10. MENYIMPAN MODEL
-# ==========================================
-
 artifact = {"model": model, "feature_columns": feature_columns}
 
+MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
 joblib.dump(artifact, MODEL_PATH)
 
 print("\nModel berhasil disimpan!")

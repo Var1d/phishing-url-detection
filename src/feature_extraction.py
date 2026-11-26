@@ -51,10 +51,7 @@ def extract_features(url):
     if not hostname:
         raise ValueError("Hostname URL tidak valid.")
 
-    # ======================================
     # 1. DOMAIN EXTRACTION
-    # ======================================
-
     try:
         ipaddress.ip_address(hostname)
         is_ip = 1
@@ -76,10 +73,7 @@ def extract_features(url):
         if not dom:
             dom = hostname
 
-    # ======================================
     # 2. CHARACTER COUNTS
-    # ======================================
-
     url_len = len(url)
 
     letter_cnt = sum(c.isalpha() for c in url)
@@ -95,42 +89,27 @@ def extract_features(url):
     under_cnt = url.count("_")
     slash_cnt = url.count("/")
 
-    # ======================================
     # 3. DOMAIN FEATURES
-    # ======================================
-
     dom_len = len(dom)
     tld_len = len(tld)
 
     subdom_cnt = len(subdomain.split(".")) if subdomain else 0
 
-    # ======================================
     # 4. RATIOS
-    # ======================================
-
     letter_ratio = letter_cnt / url_len
     digit_ratio = digit_cnt / url_len
     spec_ratio = special_cnt / url_len
 
-    # ======================================
     # 5. PROTOCOL
-    # ======================================
-
     is_https = int(parsed.scheme.lower() == "https")
 
-    # ======================================
     # 6. ENTROPY AND PATH
-    # ======================================
-
     entropy = calculate_entropy(url)
 
     path_len = len(parsed.path)
     query_len = len(parsed.query)
 
-    # ======================================
     # 7. SUSUN FITUR
-    # ======================================
-
     features = {
         "url_len": url_len,
         "dom_len": dom_len,

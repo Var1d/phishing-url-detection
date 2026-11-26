@@ -21,3 +21,7 @@ dataset/*.csv
 
 # Trained machine learning models
 models/*.pkl
+
+# Vue.js
+frontend/node_modules/
+frontend/dist/
